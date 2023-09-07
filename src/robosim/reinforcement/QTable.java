@@ -13,26 +13,40 @@ public class QTable {
     //  Calculate the learning rate using this formula: 1/(1 + total visits for this (state, action) pair/rateConstant)
     //  Should pass QTableTest.testLearningRate().
     public double getLearningRate(int state, int action) {
-        return 0.0;
+        return (1.0 / (1.0 + (((double) visits[state][action]) / rateConstant)));
     }
 
     // TODO: Find the action for the given state that has the highest q value.
     //  Should pass QTableTest.testBestAction()
     public int getBestAction(int state) {
-        return -1;
+        int m = 0;
+        double[] qs = q[state];
+        for (int i=0; i<qs.length; i++) { if (qs[i]>m) { m=i; } }
+        return m;
     }
 
     // TODO: Returns true if any action for this state is below the target
     //  visits. Returns false otherwise.
     //  Should pass QTableTest.testIsExploring()
     public boolean isExploring(int state) {
+        int[] vs =  visits[state];
+        for (int v : vs) {
+            if (v<targetVisits) {
+                return true;
+            }
+        }
         return false;
     }
 
     // TODO: Returns the least visited action in state.
     //  Should pass QTableTest.testLeastVisitedAction()
     public int leastVisitedAction(int state) {
-        return -1;
+        int[] vs = visits[state];
+        int m = 0;
+        for (int i=0; i<vs.length; i++) {
+            if (vs[i]<vs[m]) { m=i; }
+        }
+        return m;
     }
 
     // TODO:
@@ -48,11 +62,21 @@ public class QTable {
     //
     //  Q update formula:
     //    Q(s, a) = (1 - learningRate) * Q(s, a) + learningRate * (discount * maxa(Q(s', a)) + r(s))
-    public int senseActLearn(int newState, double reward) {
-        return -1;
+    public int senseActLearn(int ns, double reward) {
+        int ps = lastState; int pa = lastAction; int na = 0;
+        double lr = getLearningRate(ps,pa);
+        double a = lr * (reward + discount * q[ns][getBestAction(ns)]);
+        double b = q[ps][pa] * (1 - lr);
+        double nv = a + b;
+        q[ps][pa] = nv;
+        visits[ps][pa] += 1;
+        if (isExploring(ns)) { na = leastVisitedAction(ns); }
+        else { na = getBestAction(ns); }
+        lastState = ns; lastAction = na;
+        return na;
     }
 
-    public QTable(int states, int actions, int startState, int targetVisits, int rateConstant, double discount) {
+    public QTable(int states, int actions, int startState, int targetVisits, double rateConstant, double discount) {
         this.targetVisits = targetVisits;
         this.rateConstant = rateConstant;
         this.discount = discount;
@@ -62,7 +86,7 @@ public class QTable {
         lastAction = 0;
     }
 
-    private QTable() {}
+    public QTable() {}
 
     static QTable from(String s) {
         QTable result = new QTable();
@@ -138,3 +162,25 @@ public class QTable {
         return lastAction;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

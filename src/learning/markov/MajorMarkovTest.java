@@ -16,10 +16,10 @@ public class MajorMarkovTest {
     @Before
     public void setup() throws IOException {
         chains = new MarkovLanguage();
-        chains.countFrom(new File("books/wonderland.txt"), "English");
-        chains.countFrom(new File("books/quijote.txt"), "Spanish");
-        chains.countFrom(new File("books/candide.txt"), "French");
-        chains.countFrom(new File("books/zarathustra.txt"), "German");
+        chains.countFrom(new File("csci335/books/wonderland.txt"), "English");
+        chains.countFrom(new File("csci335/books/quijote.txt"), "Spanish");
+        chains.countFrom(new File("csci335/books/candide.txt"), "French");
+        chains.countFrom(new File("csci335/books/zarathustra.txt"), "German");
     }
 
     public void testAllOn(String filename) throws IOException {
@@ -56,7 +56,28 @@ public class MajorMarkovTest {
     
     @Test
     public void bestChainTest() {
+        System.out.println(chains.labelDistribution(MarkovLanguage.usableCharacters("This is a test. This is only a test.")));
         assertEquals("English", chains.bestMatchingChain(MarkovLanguage.usableCharacters("This is a test. This is only a test.")));
         assertEquals("Spanish", chains.bestMatchingChain(MarkovLanguage.usableCharacters("Este es una prueba. Este es solamente una prueba.")));
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -44,6 +44,7 @@ public class Sim extends JFrame {
         sim = new SimPanel();
         getContentPane().add(sim, BorderLayout.CENTER);
         sim.addMouseListener(new SimClickListener());
+        sim.addMouseMotionListener(new SimClickListener());
         sim.addKeyListener(new KeyHandler());
 
         JMenuBar bar = new JMenuBar();
@@ -162,6 +163,9 @@ public class Sim extends JFrame {
         public void mousePressed(MouseEvent e) {
             sim.add(objectToPlace.getItemAt(objectToPlace.getSelectedIndex()).makeAt(e.getX(), e.getY()));
         }
+        public void mouseDragged(MouseEvent e) {
+            sim.add(objectToPlace.getItemAt(objectToPlace.getSelectedIndex()).makeAt(e.getX(), e.getY()));
+        }
     }
 
     private void addFileMenu(JMenuBar bar) {
@@ -225,9 +229,18 @@ public class Sim extends JFrame {
         @Override
         public void keyPressed(KeyEvent e) {
             Sim.key2action(e).ifPresent(action -> {
-                action.applyTo(sim.getSim());
-                sim.getSim().move();
-                refreshStats();
+                if (e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_S ||
+                    e.getKeyCode() == KeyEvent.VK_UP   || e.getKeyCode() == KeyEvent.VK_W) {
+                    action.applyTo(sim.getSim());
+                    sim.getSim().move();
+                    refreshStats();
+                }
+                else {
+                    action.applyTo(sim.getSim());
+                    sim.getSim().move();
+                    refreshStats();
+                    Action.FORWARD.applyTo(sim.getSim());
+                }
             });
             repaint();
         }

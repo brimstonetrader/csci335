@@ -20,6 +20,15 @@ public class Simulator {
 		resize(width, height);
 	}
 
+	public int getLoc() {
+		return (int) bot.getY() * (int) height + (int) bot.getX();
+	}
+
+	public int getSector() {
+		return (((int) (bot.getY() * 5)) / (int) width) + 5*(((int) (bot.getX() * 5)) / (int) height);
+	}
+
+
 	public void resize(double width, double height) {
 		if (this.width != width || this.height != height) {
 			this.width = width;
@@ -101,6 +110,31 @@ public class Simulator {
 		double e = findClosestEdge();
 		Optional<Polar> ob = findClosestObstacle();
 		return ob.isPresent() && ob.get().getR() < e ? ob.get().getR() : e;
+	}
+
+	public boolean dirtExistsHere() {
+		boolean dirt = false;
+		for (Duple<SimObject, Polar> obj: allVisibleObjects()) {
+			if (obj.getFirst().isVacuumable()) {
+				if (Math.abs(obj.getSecond().getTheta()) < Robot.ANGULAR_VELOCITY) {
+					dirt = true;
+				}
+			}
+		} return dirt;
+	}
+	public boolean dirtExistsOnTheLeft() {
+		for (Duple<SimObject, Polar> obj: allVisibleObjects()) {
+			if (obj.getSecond().getTheta() < 0 && obj.getFirst().isVacuumable())
+				return true;
+		} return false;
+	}
+
+	public boolean dirtExistsOnTheRight() {
+		for (Duple<SimObject, Polar> obj: allVisibleObjects()) {
+			if (obj.getFirst().isVacuumable()) {
+				return true;
+			}
+		} return true;
 	}
 
 	public Optional<Polar> findClosestObstacle() {

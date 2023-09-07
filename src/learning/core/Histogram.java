@@ -57,7 +57,7 @@ public class Histogram<T> implements Iterable<T> {
     }
 
     public double getPortionFor(T value) {
-        return (double)getCountFor(value) / getTotalCounts();
+        return (double) (getCountFor(value) / getTotalCounts());
     }
 
     @Override

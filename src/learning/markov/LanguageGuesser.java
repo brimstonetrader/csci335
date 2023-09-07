@@ -22,6 +22,7 @@ public class LanguageGuesser extends JFrame {
         gui.setVisible(true);
     }
 
+
     public LanguageGuesser() {
         setSize(600, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
