@@ -1,24 +1,22 @@
 package maze.core;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
+import core.Direction;
 import core.Pos;
 
 public class MazeExplorer {
-	private Maze m;
-	private Pos location;
-	private TreeSet<Pos> treasureFound;
+	private final Maze m;
+	private final Pos location;
+	private final TreeSet<Pos> treasureFound;
 	private MazeExplorer goal;
-	
+
 	public MazeExplorer(Maze m, Pos location) {
 		this.m = m;
 		this.location = location;
-		treasureFound = new TreeSet<>();
+		this.treasureFound = new TreeSet<>();
 	}
-	
+
 	public Pos getLocation() {return location;}
 
 	public Set<Pos> getAllTreasureFromMaze() {
@@ -41,16 +39,25 @@ public class MazeExplorer {
 	}
 
 	public ArrayList<MazeExplorer> getSuccessors() {
-		ArrayList<MazeExplorer> result = new ArrayList<MazeExplorer>();
-		// TODO: It should add as a successor every adjacent, unblocked neighbor square.
-		// I added a comment for demonstration purposes.
-        return result;
+		ArrayList<MazeExplorer> result = new ArrayList<>();
+		ArrayList<Pos> posse = m.getNeighbors(location);
+		for (Pos pos : posse) {
+			MazeExplorer mazeExp = new MazeExplorer(m, pos);
+			TreeSet<Pos> tF2 = new TreeSet<>(treasureFound);
+			if (m.isTreasure(pos)) {
+				tF2.add(pos);
+			}
+			if (!m.blocked(location, pos)) {
+				mazeExp.addTreasures(tF2);
+				result.add(mazeExp);
+			}
+		} System.out.println(location); return result;
 	}
-	
+
 	public void addTreasures(Collection<Pos> treasures) {
 		treasureFound.addAll(treasures);
 	}
-	
+
 	public String toString() {
 		StringBuilder treasures = new StringBuilder();
 		for (Pos t: treasureFound) {
@@ -59,10 +66,10 @@ public class MazeExplorer {
 		}
 		return "@" + location.toString() + treasures;
 	}
-	
+
 	@Override
 	public int hashCode() {return toString().hashCode();}
-	
+
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof MazeExplorer that) {
