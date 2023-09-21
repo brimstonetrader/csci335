@@ -8,7 +8,8 @@ public class Duple<X,Y> {
 		this.x = x;
 		this.y = y;
 	}
-	
+
+
 	public X getFirst() {return x;}
 	public Y getSecond() {return y;}
 
