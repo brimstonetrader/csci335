@@ -1,0 +1,137 @@
+
+CSCI 335: Fall 2023
+
+
+
+Project 6: Handwriting Recognition/Sentiment Analysis with kNN/Naive Bayes/SOM
+Overview
+
+You will implement the k-nearest-neighbor, Naive Bayesian Classifier, and self-organizing map machine learning
+algorithms, and apply them to two tasks: Handwriting Recognition and Sentiment Analysis.
+
+Files
+
+The csci335 repository contains a learning package that we will be using in this project. It contains many files. The
+files in which you will write code are:
+
+- handwriting.core.FloatDrawing: Alternative handwriting representation for SOM.
+- sentiment.core.BagOfWordsFuncs: Distance and average-weight functions for bags-of-words.
+- classifiers.Knn: Implementation of the k-nearest-neighbor algorithm. It should pass the
+                   unit tests in classifiers.KnnTest when complete.
+- classifiers.NaiveBayes: Implementation of the Naive Bayes classifier algorithm.
+- classifiers.SOMRecognizer: Supervised learning algorithm using a SOM.
+- som.SelfOrgMap: Implementation of the self-organizing map. It should pass the unit tests
+                  in som.SelfOrgMapTest when complete.
+- handwriting.learners: Configured handwriting learners go here. A few examples are
+                        provided.
+- sentiment.learners: Configured sentiment learners go here. A few examples are provided.
+
+Other files of particular interest include:
+
+- handwriting.gui.DrawingEditor: Run this to create handwriting samples and test your
+                                 learners.
+- sentiment.gui.SentimentViewer: Run this to test your learners on sentiment analysis
+                                 problems.
+- core.Histogram: Implements a Histogram data type. This will be useful for kNN among other
+                  things.
+- core.Classifier: Interface for our machine learning algorithms.
+- handwriting.core.Drawing: Data type for handwriting samples. Drawing::distance is used by
+                            kNN.
+- handwriting.core.SOMDrawingBridge: Classifier front-end that turns Drawing objects into
+                                     FloatDrawing objects to make life easier for the self-
+                                     organizing map.
+- sentiment.core.SOMSentimentBridge: Similar role for sentiment analysis.
+
+Experiments
+Handwriting Recognition
+
+    Complete the implementations of the above files as specified.
+    Using DrawingEditor, draw 20 samples each of two letters. For each drawing, click the “Record” button when it is complete. For the label, use the letter that you drew. Once this is complete, save the file (using the Save command on the File menu).
+    Test the performance of Knn3 on these two letters. Use the Assess menu option under the Learner menu, and perform 4-way cross-validation.
+    Expand your data set to train it to distinguish three letters. Save the expanded data set under a different filename.
+    Continue iterating this process until you can build a classifier that can distinguish at least eight different letters.
+    Compare the performance of k=3 against two other values of k.
+    Repeat this process with the self-organizing map. Compare performance with three different map sizes.
+
+Sentiment Analysis
+
+    For the sentiment analysis problem, we will compare kNN and Naive Bayes.
+    Using the same values of k as before, evaluate the classification performance of each of these algorithms on the three sentiment analysis data sets: Amazon, Internet Movie Database, and Yelp. All three are found in the sentiment_labelled_sentences folder.
+
+Paper
+
+When you are finished with your experiments, write a paper summarizing your findings. Include the following:
+
+    An analysis and discussion of your data. (Be sure to include the data as well.)
+    What effect did variations of the value of k have?
+    How about variations in map size?
+    What insights did you gain from the SOM visualizations?
+    Compare the performance of kNN and the SOM for the handwriting classification tasks. Which worked better? Why?
+    Compare the performance of kNN and Naive Bayes on the sentiment analysis task. Which worked better? Why?
+    Compare the relative difficulty of the two tasks. What aspects of the tasks, in your view, contributed to this relative difficulty?
+    Beyond the actual results, what other issues are noteworthy?
+
+Submission
+
+    Post your code on Github in your private repository. Make sure the instructor is added as a collaborator.
+    Upload your paper to Microsoft Teams.
+
+Grading Criteria
+
+    Level 1
+        The kNN algorithm is implemented and functional.
+        The paper includes an analysis of kNN for each of the handwriting and sentiment analysis problems.
+    Level 2
+        The self-organizing map and naive bayes algorithms are implemented and functional.
+        The paper includes all of the above analysis.
+    Level 3
+        Find two real-world data sets that you would like to explore. Do the following:
+            Perform unsupervised learning on each data set with the self-organizing map and produce a visualization.
+                What insight do you get about the data from this process? Analyze in your paper.
+            Perform supervised learning on each data set comparing all three algorithms.
+                Which produced the best performance? Why?
+
+Copyright © Hendrix Computer Science 2023
+
+
+
+CSCI 335: Fall 2023
+Self-Organizing Maps (SOM)
+
+    Invented by Tuevo Kohonen
+        Often called “Kohonen map” or “Kohonen network”
+        Online learning variant described below devised by Claude Touzet
+    Two dimensional grid
+        Each grid entry is an ideal input.
+    Input/Output
+        SOM input: A data item of the same type as map entries.
+        SOM output: Coordinates of closest matching entry.
+    Finding the closest matching entry
+        Calculate the distance between the SOM input and every entry.
+        Whichever has the closest distance is the output.
+
+Training the SOM Online
+
+    Training set
+        Contains inputs only
+        No labels needed
+    Training parameters
+        Size of the SOM (n x n square)
+    For each input:
+        Determine the winning output node
+        Modify the winning node and its four cardinal neighbors
+            For each feature j:
+                nodej = (1 - learningRate * nodej) + learningRate * inputj
+    Determining the learning rate
+        0.9 for the winning node
+        0.4 for the neighbor nodes
+    This is an online learning algorithm
+        It updates itself when it receives each training input
+    When to terminate training? Some options:
+        When it has been trained once on every input.
+        When every input has a “good” match to a map node.
+        When every node in the map has been the winner, and hence changed.
+        It need not ever terminate!
+            It can continue updating itself as part of a system control loop.
+
+Copyright © Hendrix Computer Science 2023
