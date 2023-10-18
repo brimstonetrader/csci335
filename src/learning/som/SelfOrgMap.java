@@ -1,7 +1,12 @@
 package learning.som;
 
+import core.Duple;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import learning.handwriting.core.FloatDrawing;
 import java.util.function.ToDoubleBiFunction;
 
 public class SelfOrgMap<V> {
@@ -26,8 +31,18 @@ public class SelfOrgMap<V> {
     //  that is, the y-coordinate is updated in the outer loop, and the x-coordinate
     //  is updated in the inner loop.
     public SOMPoint bestFor(V example) {
-		// Your code here.
-        return null;
+        int n = map.length;
+        double bestSoFar = Double.MAX_VALUE;
+        SOMPoint output = new SOMPoint(0,0);
+        for (int y = 0; y < getMapHeight(); y++) {
+            for (int x = 0; x < getMapWidth(); x++) {
+                if (map[x][y] < example) {
+                    bestSoFar = (new SOMPoint(x,y)).distanceTo(output);
+                    output = new SOMPoint(x, y);
+                }
+            }
+        }
+        return output;
     }
 
     // TODO: Train this SOM with example.
@@ -37,7 +52,18 @@ public class SelfOrgMap<V> {
     //  3. Update each neighbor of the best matching node that is in the map,
     //     using a learning rate of 0.4.
     public void train(V example) {
-        // Your code here
+        SOMPoint best = bestFor(example);
+        V curr = map[best.x()][best.y()];
+        map[best.x()][best.y()] = averager.weightedAverage(curr,example,0.9);
+        int[] xs = {best.x()-1, best.x(), best.x()+1};
+        int[] ys = {best.y()-1, best.y(), best.y()+1};
+        for (int x : xs) {
+            for (int y : ys) {
+                if (y >= 0 && x >= 0 && x < getMapWidth() && y < getMapHeight() && (x != best.x() || y != best.y())) {
+                    map[x][y] = averager.weightedAverage(map[x][y],example,0.4);
+                }
+            }
+        }
     }
 
     public V getNode(int x, int y) {
