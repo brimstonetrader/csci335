@@ -40,7 +40,13 @@ public class NaiveBayes<V,L,F> implements Classifier<V,L> {
             priors.bump(d.getSecond());
             ArrayList<Duple<F,Integer>> fs = allFeaturesFrom.apply(d.getFirst());
             for (Duple<F,Integer> f : fs) {
-                featuresByLabel.get(d.getSecond()).bumpBy(f.getFirst(), f.getSecond());
+                if (featuresByLabel.containsKey(d.getSecond())) {
+                    featuresByLabel.get(d.getSecond()).bumpBy(f.getFirst(), f.getSecond());
+                }
+                else {
+                    featuresByLabel.put(d.getSecond(), new Histogram<F>());
+                    featuresByLabel.get(d.getSecond()).bumpBy(f.getFirst(), f.getSecond());
+                }
             }
         }
     }
@@ -54,14 +60,14 @@ public class NaiveBayes<V,L,F> implements Classifier<V,L> {
     @Override
     public L classify(V value) {
         ArrayList<Duple<F,Integer>> fs = allFeaturesFrom.apply(value);
-        Duple<L, Double> max = new Duple<>(null, 0.0);
-        for (L l : priors.stream().toList()) {
-            double pl = priors.getPortionFor(l);
-            double pfgl = 0.0;
+        Duple<L, Double> max = new Duple<>(null, -1000.0);
+        for (L l : featuresByLabel.keySet()) {
+            double pl = (priors.getCountFor(l)+1.0) / priors.getTotalCounts();
+            double pfgl = 1.0;
             for (Duple<F, Integer> f : fs) {
-                pfgl += pl * (double) featuresByLabel.get(l).getCountFor(f.getFirst()) / (double) f.getSecond();
+                pfgl *= 1.0+featuresByLabel.get(l).getCountFor(f.getFirst());
             }
-            if (pfgl > max.getSecond()) {
+            if ((pl*pfgl) > max.getSecond()) {
                 max = new Duple<>(l, pfgl);
             }
         }

@@ -36,8 +36,8 @@ public class SelfOrgMap<V> {
         SOMPoint output = new SOMPoint(0,0);
         for (int y = 0; y < getMapHeight(); y++) {
             for (int x = 0; x < getMapWidth(); x++) {
-                if (map[x][y] < example) {
-                    bestSoFar = (new SOMPoint(x,y)).distanceTo(output);
+                if (distance.applyAsDouble(map[x][y], example) < bestSoFar) {
+                    bestSoFar = distance.applyAsDouble(map[x][y], example);
                     output = new SOMPoint(x, y);
                 }
             }
@@ -54,14 +54,12 @@ public class SelfOrgMap<V> {
     public void train(V example) {
         SOMPoint best = bestFor(example);
         V curr = map[best.x()][best.y()];
-        map[best.x()][best.y()] = averager.weightedAverage(curr,example,0.9);
-        int[] xs = {best.x()-1, best.x(), best.x()+1};
-        int[] ys = {best.y()-1, best.y(), best.y()+1};
-        for (int x : xs) {
-            for (int y : ys) {
-                if (y >= 0 && x >= 0 && x < getMapWidth() && y < getMapHeight() && (x != best.x() || y != best.y())) {
-                    map[x][y] = averager.weightedAverage(map[x][y],example,0.4);
-                }
+        map[best.x()][best.y()] = averager.weightedAverage(example,curr,0.9);
+        for (SOMPoint som : best.neighbors()) {
+            int x = som.x();
+            int y = som.y();
+            if (y >= 0 && x >= 0 && x < getMapWidth() && y < getMapHeight()) {
+                    map[x][y] = averager.weightedAverage(example,map[x][y],0.4);
             }
         }
     }
