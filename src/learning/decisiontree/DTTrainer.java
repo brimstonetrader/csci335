@@ -54,7 +54,7 @@ public class DTTrainer<V,L, F, FV extends Comparable<FV>> {
 		} else {
 			// TODO: Return an interior node.
 			//  If restrictFeatures is false, call allFeatures.apply() to get a complete list
-			//  of features and values, all of which you should cosider when splitting.
+			//  of features and values, all of which you should consider when splitting.
 			//  If restrictFeatures is true, call reducedFeatures() to get sqrt(# features)
 			//  of possible features/values as candidates for the split. In either case,
 			//  for each feature/value combination, use the splitOn() function to break the
