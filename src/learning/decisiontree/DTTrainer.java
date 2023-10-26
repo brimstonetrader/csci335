@@ -15,7 +15,7 @@ public class DTTrainer<V,L, F, FV extends Comparable<FV>> {
 	private Function<ArrayList<Duple<V,L>>, ArrayList<Duple<F,FV>>> allFeatures;
 	private BiFunction<V,F,FV> getFeatureValue;
 	private Function<FV,FV> successor;
-	
+
 	public DTTrainer(ArrayList<Duple<V, L>> data, Function<ArrayList<Duple<V, L>>, ArrayList<Duple<F,FV>>> allFeatures,
 					 boolean restrictFeatures, BiFunction<V,F,FV> getFeatureValue, Function<FV,FV> successor) {
 		baseData = data;
@@ -24,7 +24,7 @@ public class DTTrainer<V,L, F, FV extends Comparable<FV>> {
 		this.getFeatureValue = getFeatureValue;
 		this.successor = successor;
 	}
-	
+
 	public DTTrainer(ArrayList<Duple<V, L>> data, Function<ArrayList<Duple<V,L>>, ArrayList<Duple<F,FV>>> allFeatures,
 					 BiFunction<V,F,FV> getFeatureValue, Function<FV,FV> successor) {
 		this(data, allFeatures, false, getFeatureValue, successor);
@@ -35,9 +35,16 @@ public class DTTrainer<V,L, F, FV extends Comparable<FV>> {
 	public static <V,L, F, FV  extends Comparable<FV>> ArrayList<Duple<F,FV>>
 	reducedFeatures(ArrayList<Duple<V,L>> data, Function<ArrayList<Duple<V, L>>, ArrayList<Duple<F,FV>>> allFeatures,
 					int targetNumber) {
-		return null;
+		ArrayList<Duple<F, FV>> list = allFeatures.apply(data);
+		ArrayList<Duple<F, FV>> shuffledList = resample(list);
+		ArrayList<Duple<F, FV>> part = new ArrayList<>();
+		if (shuffledList.size() < 2) { return shuffledList; }
+		for (int q = 0; q < Math.min(targetNumber, shuffledList.size()); q++) {
+			part.add(shuffledList.get(q));
+		}
+		return part;
     }
-	
+
 	public DecisionTree<V,L,F,FV> train() {
 		return train(baseData);
 	}
@@ -45,13 +52,18 @@ public class DTTrainer<V,L, F, FV extends Comparable<FV>> {
 	public static <V,L> int numLabels(ArrayList<Duple<V,L>> data) {
 		return data.stream().map(Duple::getSecond).collect(Collectors.toUnmodifiableSet()).size();
 	}
-	
+
 	private DecisionTree<V,L,F,FV> train(ArrayList<Duple<V,L>> data) {
 		// TODO: Implement the decision tree learning algorithm
 		if (numLabels(data) == 1) {
 			// TODO: Return a leaf node consisting of the only label in data
+			return new DTLeaf<>(data.get(0).getSecond());
+		}
+		if (data.size() == 0) {
 			return null;
-		} else {
+		}
+
+		else {
 			// TODO: Return an interior node.
 			//  If restrictFeatures is false, call allFeatures.apply() to get a complete list
 			//  of features and values, all of which you should consider when splitting.
@@ -65,8 +77,30 @@ public class DTTrainer<V,L, F, FV extends Comparable<FV>> {
 			//  Note: It is possible for the split to fail; that is, you can have a split
 			//  in which one branch has zero elements. In this case, return a leaf node
 			//  containing the most popular label in the branch that has elements.
-			return null;
-		}		
+			ArrayList<Duple<F, FV>> feat = allFeatures.apply(data);
+			if (feat.size() == 0) { return new DTLeaf<>(data.get(0).getSecond()); }
+			Duple<F,FV> maxF = feat.get(0);
+			double maxGain = -3;
+			Duple<ArrayList<Duple<V, L>>, ArrayList<Duple<V, L>>> maxSplit = new Duple<>(new ArrayList<>(), new ArrayList<>());
+			if (restrictFeatures) { feat = reducedFeatures(data, allFeatures, (int) Math.pow(data.size(),0.5)); }
+			for (Duple<F,FV> f : feat) {
+				Duple<ArrayList<Duple<V, L>>, ArrayList<Duple<V, L>>> a = splitOn(data, f.getFirst(), f.getSecond(), getFeatureValue);
+				if (a.getFirst().size() == 0 || a.getSecond().size() == 0) {
+					continue;
+				}
+				double g = gain(data, a.getFirst(), a.getSecond());
+				if (g > maxGain) {
+					maxGain = g;
+					maxSplit = a;
+					maxF = f;
+				}
+			}
+			if (maxSplit.getFirst().size() == 0 || maxSplit.getSecond().size() == 0)
+			    { return new DTLeaf<>(data.get(0).getSecond()); }
+			DecisionTree<V,L,F,FV> left  = train(maxSplit.getFirst());
+			DecisionTree<V,L,F,FV> right = train(maxSplit.getSecond());
+			return new DTInterior<>(maxF.getFirst(), maxF.getSecond(), left, right, getFeatureValue, successor);
+		}
 	}
 
 	public static <V,L> L mostPopularLabelFrom(ArrayList<Duple<V, L>> data) {
@@ -81,23 +115,31 @@ public class DTTrainer<V,L, F, FV extends Comparable<FV>> {
 	//    an `ArrayList` that is the same length as `data`, where each element is selected randomly
 	//    from `data`. Should pass `DTTest.testResample()`.
 	public static <V,L> ArrayList<Duple<V,L>> resample(ArrayList<Duple<V,L>> data) {
-		return null;
+		Collections.shuffle(data);
+		return data;
 	}
 
-	public static <V,L> double getGini(ArrayList<Duple<V,L>> data) {
-		// TODO: Calculate the Gini coefficient:
-		//  For each label, calculate its portion of the whole (p_i).
-		//  Use of a Histogram<L> for this purpose is recommended.
-		//  Gini coefficient is 1 - sum(for all labels i, p_i^2)
-		//  Should pass DTTest.testGini().
-		return 1.0;
+	public static <V, L> double getGini(ArrayList<Duple<V, L>> data) {
+		double gini = 0.0;
+		Histogram<L> labels = new Histogram<L>();
+
+		for (Duple<V, L> d : data) {
+			labels.bump(d.getSecond());
+		}
+
+		for (L l : labels) {
+			double p_i = (double) labels.getCountFor(l) / (double) data.size();
+			gini += p_i * p_i;
+		}
+
+		return 1 - gini;
 	}
 
 	public static <V,L> double gain(ArrayList<Duple<V,L>> parent, ArrayList<Duple<V,L>> child1,
 									ArrayList<Duple<V,L>> child2) {
 		// TODO: Calculate the gain of the split. Add the gini values for the children.
 		//  Subtract that sum from the gini value for the parent. Should pass DTTest.testGain().
-		return 0;
+		return getGini(parent) - getGini(child1) - getGini(child2);
 	}
 
 	public static <V,L, F, FV  extends Comparable<FV>> Duple<ArrayList<Duple<V,L>>,ArrayList<Duple<V,L>>> splitOn
@@ -108,7 +150,16 @@ public class DTTrainer<V,L, F, FV extends Comparable<FV>> {
 		//  feature has a value less than or equal to featureValue. The second
 		//  returned list should be everything else from this list.
 		//  Should pass DTTest.testSplit().
-
-		return null;
+		ArrayList<Duple<V,L>> lessSet = new ArrayList<>();
+		ArrayList<Duple<V,L>> moreSet = new ArrayList<>();
+		for (Duple<V,L> d : data) {
+			if (getFeatureValue.apply(d.getFirst(), feature).compareTo(featureValue) > 0) {
+				moreSet.add(d);
+			}
+			else {
+				lessSet.add(d);
+			}
+		}
+		return new Duple<>(lessSet, moreSet);
 	}
 }

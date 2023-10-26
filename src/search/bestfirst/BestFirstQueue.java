@@ -17,7 +17,7 @@ public class BestFirstQueue<T> implements SearchQueue<T> {
     private HashMap<T,Integer> lowestEstimateFor;
 
     // Use this heuristic to get the estimated distance to the goal node.
-    private ToIntFunction<T> heuristic;
+    // private ToIntFunction<T> heuristic;
 
     public BestFirstQueue(ToIntFunction<T> heuristic) {
         this.pq = new PriorityQueue<>(new PosComp(heuristic));
